@@ -1,4 +1,4 @@
-# KOD Racing - T 
+# KOD Racing
 
 A 3D arcade street racer that runs in the browser (Three.js). There's no build step: open `index.html` or host it on GitHub Pages.
 
