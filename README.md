@@ -1,4 +1,4 @@
-# KOD Racing 3D
+# KOD Racing - T 
 
 A 3D arcade street racer that runs in the browser (Three.js). There's no build step: open `index.html` or host it on GitHub Pages.
 
@@ -17,6 +17,7 @@ A 3D arcade street racer that runs in the browser (Three.js). There's no build s
 - **Rain**: a wet, reflective road with puddles, falling rain, drops on the screen, spray behind the cars, and lightning with thunder. The car has less grip and longer braking (handled in the C++ physics), and the bots drive more carefully.
 - **Finish replay**: after the finish line you see the last seconds again with cinematic camera angles (trackside, low, orbit, helicopter) and slow motion at the finish line. Press Enter or click to skip.
 - **Damage**: hits against walls and other cars dent the bodywork and fill the damage bar. A damaged car smokes, catches fire when badly hurt, loses top speed and pulls to one side (C++ physics).
+- **Garage & tuning**: open the garage from the menu. There are 4 cars (KOD GT, SPORT R, DRIFT S, HYPER X). You can change the colour, rims and spoiler, and upgrade the engine, tyres and brakes with credits you win in races. Winning races unlocks new cars. Your chosen car and all its parts are saved in the browser. Each car's handling and every upgrade are part of the C++ physics; the spoiler gives more grip in fast corners but a little less top speed.
 - **Music**: a synthwave track generated live in the browser that gets more intense on the last lap. You can turn it off in the menu.
 - **Controls written in C++** and compiled to WebAssembly (see below).
 
@@ -38,7 +39,7 @@ A 3D arcade street racer that runs in the browser (Three.js). There's no build s
 |---|---|
 | `index.html` | Page layout: HUD, menu, pause screen, touch buttons |
 | `css/style.css` | All styles |
-| `controls/controls.cpp` | **C++ controls:** key bindings, keyboard/touch input state, and the car's driving physics (gas, brake, steering, drift, nitro, rain grip, damage) |
+| `controls/controls.cpp` | **C++ controls:** key bindings, keyboard/touch input state, and the car's driving physics (gas, brake, steering, drift, nitro, rain grip, damage), plus the stats of every car and the effect of upgrades and spoilers |
 | `controls/controls.wasm` | `controls.cpp` compiled to WebAssembly; this is what the browser runs |
 | `controls/build.sh` | Rebuilds `controls.wasm` from `controls.cpp` |
 | `js/game.js` | Everything else: track, graphics, bots, sound, camera. It loads `controls.wasm` and calls it every frame |

@@ -70,3 +70,46 @@ button{border:0;border-radius:13px;padding:13px 20px;font-weight:800;font-size:1
 #loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#0b1016;z-index:20;font-size:18px}
 body.touch .kbd{display:none}
 @media(max-width:600px){body.touch #dash{bottom:172px;width:200px}#minimap{width:110px;height:110px;top:60px}h1{font-size:32px}#message{font-size:60px}.box{font-size:12px;padding:6px 8px}#speed{font-size:36px}}
+#mycar{font-size:13px;color:#cfd8e2;margin-top:6px}
+.big.alt{background:#26303b;margin-top:8px}
+.reward{color:#5fe08a!important;font-weight:800}
+.unlock{color:#ffd84a!important;font-weight:800}
+#garage{position:absolute;inset:0;z-index:10;display:none}
+#gview{position:absolute;inset:0;cursor:grab;touch-action:none}
+#gview:active{cursor:grabbing}
+#gtop{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;pointer-events:none}
+#gtop .spacer{flex:1}
+#gtop button{pointer-events:auto;color:#fff;font-size:14px}
+#gpanel{position:absolute;right:16px;top:64px;bottom:16px;width:360px;max-height:none;box-sizing:border-box;padding:18px 20px;text-align:left}
+.gsel{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:center}
+.gsel button{background:#1c2633;color:#fff;padding:10px 14px}
+.gsel h2{margin:0;font-size:26px;font-style:italic;letter-spacing:1px}
+.gsel small{color:#8e9aa7;font-size:12px}
+#gdesc{text-align:center;font-size:13px;margin:4px 0 8px}
+#glock{background:#2a1c10;border:1px solid #ffb02e55;color:#ffcf7a;border-radius:12px;padding:8px 10px;font-size:13px;text-align:center;margin-bottom:8px}
+#gpanel.locked #gtab-look,#gpanel.locked #gtab-tune{opacity:.45;pointer-events:none}
+.stat{display:grid;grid-template-columns:82px 1fr 64px;align-items:center;gap:8px;font-size:12px;color:#cfd8e2;margin:5px 0}
+.stat b{text-align:right;font-variant-numeric:tabular-nums}
+.stat .bar{position:relative;height:8px;border-radius:6px;background:#0a1018;overflow:hidden}
+.stat .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,#2a6cff,#a64cff)}
+.stat .bar i.max{background:#ffffff1a}
+#gtabs{margin:12px 0 6px}
+#gtabs button{flex:1}
+.glabel{font-weight:700;color:#cfd8e2;font-size:13px;margin:10px 0 6px}
+.glabel small{font-weight:400;color:#8e9aa7;font-size:11px}
+#gcolors{display:flex;flex-wrap:wrap;gap:7px}
+.sw{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid #ffffff30;cursor:pointer;position:relative;display:inline-block;box-sizing:border-box}
+.sw.sel{border-color:#fff;box-shadow:0 0 0 2px #2a6cff}
+.sw input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;border:0;padding:0}
+#grims,#gspoil{flex-wrap:wrap}
+#grims button,#gspoil button{flex:1;padding:8px 6px}
+.uprow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid #ffffff14}
+.uprow small{display:block;color:#8e9aa7;font-size:11px;margin-top:2px}
+.lvl{display:flex;gap:4px;margin-top:6px}
+.lvl i{width:26px;height:6px;border-radius:3px;background:#0a1018}
+.lvl i.on{background:linear-gradient(90deg,#3cf,#a6f)}
+.up{background:#2a6cff;color:#fff;font-size:13px;padding:9px 12px;white-space:nowrap}
+.up:disabled{background:#26303b;color:#6b7785;cursor:default}
+#gpick:disabled{opacity:.6;cursor:default}
+body.in-garage #hud,body.in-garage #dash,body.in-garage #minimap,body.in-garage #touch,body.in-garage #toast,body.in-garage #wrongway,body.in-garage #message{display:none!important}
+@media(max-width:759px){#gpanel{left:10px;right:10px;width:auto;top:auto;bottom:10px;max-height:52%;padding:14px}.gsel h2{font-size:21px}}
