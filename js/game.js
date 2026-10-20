@@ -239,8 +239,25 @@ const windowMats=[];
 // ---------- cars ----------
 const NAMES=['ТИ','ВИХЪР','МЪЛНИЯ','ТИГЪР'];
 const COLORS=[0x1976ff,0xff3434,0xffc928,0x20d47a];
+// Car models, same order as kModels in controls.cpp (the driving numbers live there).
+// w/len/h: body size, y: body centre, cab: [width, height, length, z] of the cabin, wheel: radius
+const MODELS=[
+ {name:'KOD GT',wins:0,desc:'Балансирана кола за начало.',w:2.1,len:4.5,h:.5,y:.62,cab:[1.62,.55,2.0,-.25],wheel:.46,wz:1.45},
+ {name:'SPORT R',wins:1,desc:'По-бърза, с повече сцепление.',w:2.2,len:4.6,h:.44,y:.58,cab:[1.56,.48,1.9,-.35],wheel:.47,wz:1.5},
+ {name:'DRIFT S',wins:3,desc:'Завива рязко и дрифтира лесно.',w:2.05,len:4.35,h:.54,y:.64,cab:[1.68,.6,2.15,-.4],wheel:.45,wz:1.4},
+ {name:'HYPER X',wins:6,desc:'Най-бързата кола в гаража.',w:2.24,len:4.7,h:.36,y:.55,cab:[1.46,.42,1.7,-.15],wheel:.49,wz:1.55}
+];
+const RIMS=[
+ {name:'Класика',color:0xb8c0c8,metal:.8,rough:.3,spokes:4},
+ {name:'Черни',color:0x1d2024,metal:.6,rough:.35,spokes:5},
+ {name:'Златни',color:0xd4a537,metal:.9,rough:.25,spokes:10},
+ {name:'Неон',color:0xe8eef5,metal:1,rough:.1,spokes:6,glow:0x22d3ff}
+];
+const SPOILERS=['Без','Нисък','GT крило','Високо'];
 function numberTex(n,col){return canvasTex(64,64,(g,w,h)=>{g.fillStyle='#fff';g.beginPath();g.arc(32,32,28,0,7);g.fill();g.fillStyle=col;g.font='bold 38px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(n,32,34)},false)}
-function makeCar(color,num){
+function makeCar(color,num,opt={}){
+ const M=MODELS[opt.model||0],rimStyle=RIMS[opt.rims||0],spoiler=opt.spoiler??2;
+ const top=M.y+M.h/2,back=-M.len/2,[cw,ch,cl,cz]=M.cab;
  const g=new THREE.Group(),body=new THREE.Group();g.add(body);
  const paint=new THREE.MeshStandardMaterial({color,metalness:.55,roughness:.28});
  const dark=new THREE.MeshStandardMaterial({color:0x15181d,roughness:.6});
@@ -248,36 +265,45 @@ function makeCar(color,num){
  const add=(geo,mat,x,y,z,parent=body)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m};
  // panels are subdivided so they can be dented locally
  const dents=[
-  add(new THREE.BoxGeometry(2.1,.5,4.5,6,2,14),paint,0,.62,0),
-  add(new THREE.BoxGeometry(2.0,.22,1.3,6,1,4),paint,0,.95,1.4),
-  add(new THREE.BoxGeometry(1.62,.55,2.0,4,2,5),glass,0,1.13,-.25),
-  add(new THREE.BoxGeometry(1.5,.08,1.6,4,1,4),paint,0,1.44,-.3)];
+  add(new THREE.BoxGeometry(M.w,M.h,M.len,6,2,14),paint,0,M.y,0),
+  add(new THREE.BoxGeometry(M.w-.1,.22,1.3,6,1,4),paint,0,top+.08,M.len/2-.85),
+  add(new THREE.BoxGeometry(cw,ch,cl,4,2,5),glass,0,top+ch/2,cz),
+  add(new THREE.BoxGeometry(cw-.12,.08,cl-.4,4,1,4),paint,0,top+ch+.02,cz-.05)];
  dents[1].rotation.x=.12;
+ add(new THREE.BoxGeometry(M.w+.06,.22,M.len*.71),dark,0,M.y-.24,0);
+ add(new THREE.BoxGeometry(.32,.02,M.len-.1),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4}),0,top+.005,.05);
+ if(spoiler===1){const lip=add(new THREE.BoxGeometry(M.w-.1,.1,.4,6,1,2),paint,0,top+.06,back+.25);lip.rotation.x=-.3;dents.push(lip)}
+ if(spoiler>=2){const hi=spoiler===3,py=hi?.38:.18,wy=hi?.78:.4;
+  for(const x of [-.75,.75])add(new THREE.BoxGeometry(.1,py*2+.04,.1),dark,x,top+py,back+.25);
+  dents.push(add(new THREE.BoxGeometry(M.w,.08,.55,6,1,2),paint,0,top+wy,back+.2));
+  if(hi)for(const x of [-M.w/2,M.w/2])add(new THREE.BoxGeometry(.06,.36,.64),dark,x,top+wy+.08,back+.2)}
  dents.forEach(m=>m.geometry.userData.orig=m.geometry.attributes.position.array.slice());
- add(new THREE.BoxGeometry(2.16,.22,3.2),dark,0,.38,0);
- add(new THREE.BoxGeometry(.32,.02,4.4),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4}),0,.875,.05);
- for(const x of [-.75,.75])add(new THREE.BoxGeometry(.1,.4,.1),dark,x,1.05,-2.0);
- dents.push(add(new THREE.BoxGeometry(2.1,.08,.55,6,1,2),paint,0,1.27,-2.05));
- dents[4].geometry.userData.orig=dents[4].geometry.attributes.position.array.slice();
  const roofNum=new THREE.Mesh(new THREE.PlaneGeometry(.9,.9),new THREE.MeshBasicMaterial({map:numberTex(num,'#'+color.toString(16).padStart(6,'0')),transparent:true}));
- roofNum.rotation.set(-Math.PI/2,0,Math.PI);roofNum.position.set(0,1.49,-.3);body.add(roofNum);
+ roofNum.rotation.set(-Math.PI/2,0,Math.PI);roofNum.position.set(0,top+ch+.07,cz-.05);body.add(roofNum);
  const headMat=new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xfff6d8,emissiveIntensity:1.2});
  const tailMat=new THREE.MeshStandardMaterial({color:0x550000,emissive:0xff1010,emissiveIntensity:.6});
- for(const x of [-.65,.65]){add(new THREE.BoxGeometry(.45,.16,.06),headMat,x,.78,2.26);add(new THREE.BoxGeometry(.5,.16,.06),tailMat,x,.78,-2.26)}
+ for(const x of [-.65,.65]){add(new THREE.BoxGeometry(.45,.16,.06),headMat,x,M.y+.16,M.len/2+.01);add(new THREE.BoxGeometry(.5,.16,.06),tailMat,x,M.y+.16,back-.01)}
  const flameMat=new THREE.MeshBasicMaterial({color:0x66ccff,transparent:true,opacity:.85,blending:THREE.AdditiveBlending,depthWrite:false});
  const flames=[];
- for(const x of [-.5,.5]){const f=new THREE.Mesh(new THREE.ConeGeometry(.2,1.4,10),flameMat);f.rotation.x=-Math.PI/2;f.position.set(x,.5,-2.95);f.visible=false;body.add(f);flames.push(f)}
- const tireMat=new THREE.MeshStandardMaterial({color:0x111111,roughness:.9}),rimMat=new THREE.MeshStandardMaterial({color:0xb8c0c8,metalness:.8,roughness:.3});
+ for(const x of [-.5,.5]){const f=new THREE.Mesh(new THREE.ConeGeometry(.2,1.4,10),flameMat);f.rotation.x=-Math.PI/2;f.position.set(x,.5,back-.7);f.visible=false;body.add(f);flames.push(f)}
+ // wheels: dark barrel, coloured lip and spokes
+ const r=M.wheel,tireMat=new THREE.MeshStandardMaterial({color:0x111111,roughness:.9}),barrelMat=new THREE.MeshStandardMaterial({color:0x2a2d33,roughness:.6});
+ const rimMat=new THREE.MeshStandardMaterial({color:rimStyle.color,metalness:rimStyle.metal,roughness:rimStyle.rough});
+ const glowMat=rimStyle.glow?new THREE.MeshBasicMaterial({color:rimStyle.glow}):null;
  const spinners=[],steerers=[];
- for(const x of [-1.07,1.07])for(const z of [-1.45,1.45]){
-  const pivot=new THREE.Group();pivot.position.set(x,.46,z);g.add(pivot);
+ for(const x of [-(M.w/2+.02),M.w/2+.02])for(const z of [-M.wz,M.wz]){
+  const pivot=new THREE.Group();pivot.position.set(x,r,z);g.add(pivot);
   const spin=new THREE.Group();pivot.add(spin);
-  const tire=new THREE.Mesh(new THREE.CylinderGeometry(.46,.46,.36,20),tireMat);tire.rotation.z=Math.PI/2;tire.castShadow=true;spin.add(tire);
-  const rim=new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.38,10),rimMat);rim.rotation.z=Math.PI/2;spin.add(rim);
-  const spoke=new THREE.Mesh(new THREE.BoxGeometry(.4,.08,.5),rimMat);spin.add(spoke);
+  const tire=new THREE.Mesh(new THREE.CylinderGeometry(r,r,.36,20),tireMat);tire.rotation.z=Math.PI/2;tire.castShadow=true;spin.add(tire);
+  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(r*.62,r*.62,.37,16),barrelMat);barrel.rotation.z=Math.PI/2;spin.add(barrel);
+  for(const sx of [-.19,.19]){const lip=new THREE.Mesh(new THREE.TorusGeometry(r*.6,.035,6,24),glowMat||rimMat);lip.rotation.y=Math.PI/2;lip.position.x=sx;spin.add(lip)}
+  const hub=new THREE.Mesh(new THREE.CylinderGeometry(r*.14,r*.14,.41,10),rimMat);hub.rotation.z=Math.PI/2;spin.add(hub);
+  for(let k=0;k<rimStyle.spokes;k++){const a=k/rimStyle.spokes*Math.PI*2;
+   const sp=new THREE.Mesh(new THREE.BoxGeometry(.4,rimStyle.spokes>6?.035:.07,r*.56),rimMat);
+   sp.rotation.x=a;sp.position.set(0,-Math.sin(a)*r*.3,Math.cos(a)*r*.3);spin.add(sp)}
   spinners.push(spin);if(z>0)steerers.push(pivot);
  }
- return {g,body,spinners,steerers,flames,tailMat,headMat,flameMat,dents};
+ return {g,body,spinners,steerers,flames,tailMat,headMat,flameMat,dents,paint};
 }
 const _dp=new THREE.Vector3();
 function dentCar(c,wx,wy,wz,amount){
@@ -311,10 +337,36 @@ function animateCar(c,dt,speed,steer,roll,pitch,boosting,braking){
 const player={car:makeCar(COLORS[0],1),name:NAMES[0],color:COLORS[0],x:0,z:0,angle:0,vx:0,vz:0,steer:0,nitro:0,dist:0,s:0,idx:0,lat:0,
  finished:false,finishTime:0,lapStart:0,laps:[],drift:0,driftScore:0,wrong:0,lastF:0,lastR:0,damage:0};
 scene.add(player.car.g);
-const headlight=new THREE.SpotLight(0xfff2d0,0,90,.55,.5,1.2);headlight.position.set(0,1,1.8);player.car.g.add(headlight);
-headlight.target.position.set(0,0,25);player.car.g.add(headlight.target);
+const headlight=new THREE.SpotLight(0xfff2d0,0,90,.55,.5,1.2);headlight.position.set(0,1,1.8);
+headlight.target.position.set(0,0,25);
+// ---------- garage save ----------
+// money, wins and every car's colour / parts / upgrade levels, kept in localStorage
+const PAINTS=[0x1976ff,0xff3434,0xffc928,0x20d47a,0xff7a1a,0xa64cff,0xff4fb8,0x18d6e8,0xf2f4f7,0x2b2f36,0x8a0f1e,0x0e3b2a];
+const UPGRADES=[['engine','Двигател','⚙️','+скорост и ускорение'],['tires','Гуми','🛞','+сцепление, по-добре в дъжд'],['brakes','Спирачки','🛑','+по-късно спиране']];
+const UPGRADE_COST=[400,900,1600];
+const garage=(()=>{
+ const g=Object.assign({money:0,wins:0,races:0,sel:0,cars:[]},store.get('kod-garage')||{});
+ MODELS.forEach((m,i)=>{g.cars[i]=Object.assign({color:[0x1976ff,0xff7a1a,0xa64cff,0xf2f4f7][i],rims:i,spoiler:[2,1,3,2][i],engine:0,tires:0,brakes:0},g.cars[i]||{});
+  for(const k of ['rims','spoiler'])g.cars[i][k]=clamp(g.cars[i][k]|0,0,3);
+  for(const [k] of UPGRADES)g.cars[i][k]=clamp(g.cars[i][k]|0,0,3)});
+ g.money=Math.max(0,g.money|0);g.wins=Math.max(0,g.wins|0);
+ if(!(g.sel>=0&&g.sel<MODELS.length)||g.wins<MODELS[g.sel].wins)g.sel=0;
+ return g;
+})();
+const saveGarage=()=>store.set('kod-garage',garage);
+const unlocked=i=>garage.wins>=MODELS[i].wins;
+const setupCar=i=>{const c=garage.cars[i];ctl.set_setup(i,c.engine,c.tires,c.brakes,c.spoiler)};
+function buildPlayerCar(){
+ const i=garage.sel,c=garage.cars[i];
+ scene.remove(player.car.g);
+ player.car=makeCar(c.color,1,{model:i,rims:c.rims,spoiler:c.spoiler});player.color=c.color;
+ player.car.g.add(headlight,headlight.target);
+ player.car.headMat.emissiveIntensity=1.2+TOD[settings.tod].night*3;
+ player.car.g.position.set(player.x,0,player.z);player.car.g.rotation.y=player.angle;
+ scene.add(player.car.g);
+}
 
-const bots=[1,2,3].map(k=>{const c=makeCar(COLORS[k],k+1);scene.add(c.g);
+const bots=[1,2,3].map(k=>{const c=makeCar(COLORS[k],k+1,{model:k,rims:k-1,spoiler:[1,3,2][k-1]});scene.add(c.g);
  return {car:c,name:NAMES[k],color:COLORS[k],dist:0,lat:0,laneT:0,v:0,skill:1,offset:0,laneTimer:0,finished:false,finishTime:0,boost:0,x:0,z:0,angle:0,steer:0,damage:0}});
 const cars=[player,...bots];
 
@@ -328,7 +380,7 @@ function speedProfile(latAcc,top,dec){
 const lineLat=(()=>{const raw=KS.map(k=>clamp(-k*260,-5.2,5.2)),o=[];
  for(let i=0;i<N;i++){let s=0;for(let k=-25;k<=25;k++)s+=raw[wrapI(i+k)];o.push(s/51)}return o})();
 const DIFF=[{lat:16,top:32,skill:[.86,.92]},{lat:20,top:38,skill:[.93,.98]},{lat:25,top:43,skill:[.98,1.03]}];
-let botProfile=null;
+let botProfile=null,botTop=0;
 
 // ---------- particles, skid marks ----------
 const particles=[];
@@ -502,7 +554,7 @@ addEventListener('keydown',e=>{
  if(cmd===CMD.camera){camMode=(camMode+1)%3;store.set('kod-cam',camMode);toast(['КАМЕРА: ПРЕСЛЕДВАНЕ','КАМЕРА: ОТДАЛЕЧ','КАМЕРА: КАПАК'][camMode])}
  if(cmd===CMD.mute)setMuted(!audio.muted);
  if(cmd===CMD.respawn&&state==='race')respawn();
- if(cmd===CMD.pause)togglePause();
+ if(cmd===CMD.pause){if(state==='garage')closeGarage();else togglePause()}
  if(cmd===CMD.start&&state==='menu')startRace();
  else if(cmd===CMD.start&&state==='replay')endReplay();
 });
@@ -581,7 +633,10 @@ const LAPS=()=>settings.laps;
 function gridSlot(k){return {d:-10-Math.floor(k/2)*9,lat:k%2?3.6:-3.6}}
 function resetRace(){
  const d=DIFF[settings.diff];
- botProfile=isRain()?speedProfile(d.lat*.78,d.top,16):speedProfile(d.lat,d.top,20);
+ // tune the C++ physics for the chosen car; bots get a bit quicker against faster cars
+ setupCar(garage.sel);
+ const perf=ctl.setup_value(0)/40,lat=d.lat*(1+(perf-1)*.4);botTop=d.top*(1+(perf-1)*.6);
+ botProfile=isRain()?speedProfile(lat*.78,botTop,16):speedProfile(lat,botTop,20);
  // player starts last (slot 3)
  const g=gridSlot(3),p=trackAt(g.d,g.lat);
  Object.assign(player,{x:p.x,z:p.z,angle:p.angle,vx:0,vz:0,steer:0,nitro:.25,dist:g.d,s:wrapS(g.d),idx:p.i,lat:g.lat,finished:false,finishTime:0,lapStart:0,laps:[],drift:0,driftScore:0,wrong:0,wasBoost:false,damage:0});
@@ -594,7 +649,8 @@ function resetRace(){
 }
 function placeBot(b){const p=trackAt(b.dist,b.lat);b.x=p.x;b.z=p.z;b.angle=p.angle;b.car.g.position.set(p.x,0,p.z);b.car.g.rotation.y=p.angle}
 function startRace(){
- initAudio();resetRace();musicStart();
+ if(state!=='menu')return;
+ initAudio();buildPlayerCar();resetRace();musicStart();
  $('menu').style.display='none';$('results').innerHTML='';
  state='countdown';countdown=4;lastCount=5;gasDownAt=-1;setStartLights(0,false);
  camYaw=player.angle;camera.position.set(player.x-Math.sin(player.angle)*10,4,player.z-Math.cos(player.angle)*10);
@@ -611,10 +667,22 @@ $('resume').onclick=togglePause;
 $('quit').onclick=()=>{$('pause').style.display='none';audio.ctx&&audio.ctx.resume();toMenu()};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(state==='race'||state==='countdown'))togglePause()});
 function toMenu(){state='menu';musicStop();document.body.classList.remove('replaying');$('menu').style.display='flex';$('message').style.display='none';$('title').textContent='KOD RACING 3D';$('start').textContent='СТАРТ НА СЪСТЕЗАНИЕТО';showBest()}
+function showCarInfo(){$('mycar').innerHTML=`🚗 <b>${MODELS[garage.sel].name}</b> · 💰 ${garage.money} · 🏆 ${garage.wins}`}
 
+let lastReward=null;
+function giveReward(pos){
+ const lapMul={1:.5,3:1,5:1.5}[settings.laps],diffMul=[.8,1,1.3][settings.diff];
+ const money=Math.round([600,350,200,100][pos-1]*lapMul*diffMul/10)*10;
+ const before=garage.wins;
+ garage.money+=money;garage.races++;if(pos===1)garage.wins++;
+ const fresh=MODELS.filter(m=>m.wins>before&&m.wins<=garage.wins).map(m=>m.name);
+ saveGarage();
+ lastReward={money,fresh};
+}
 function finishPlayer(){
  player.finished=true;player.finishTime=raceTime;
  const pos=standings().indexOf(player)+1;
+ giveReward(pos);
  bigMessage(pos===1?'🏆 ПОБЕДА!<small>'+fmt(raceTime)+' сек</small>':'FINISH!<small>'+pos+'-ро място · '+fmt(raceTime)+' сек</small>');
  [523,659,784,1046].forEach((f,k)=>setTimeout(()=>beep(f,.25,.25,'triangle'),k*120));
  const b=store.get(bestKey())||{};let rec=false;
@@ -625,12 +693,15 @@ function finishPlayer(){
  setTimeout(()=>{if(state==='finished')startReplay()},2200);
 }
 function showResults(rec){
+ showCarInfo();
  const order=standings();
  const total=LAPS()*L;
  const rows=order.map((c,k)=>{const t=c.finished?c.finishTime:raceTime*total/Math.max(1,c.dist);
   return `<tr class="${c===player?'me':''}"><td>${['🥇','🥈','🥉','4.'][k]}</td><td>${c.name}</td><td>${c.finished?'':'~'}${fmt(t)}</td></tr>`}).join('');
  $('results').innerHTML=`<table>${rows}</table>`+(rec?'<p style="color:#ffd84a;font-weight:800">⭐ НОВ РЕКОРД!</p>':'')+
-  `<p class="keys">Обиколки: ${player.laps.map(fmt).join(' · ')}</p>`;
+  `<p class="keys">Обиколки: ${player.laps.map(fmt).join(' · ')}</p>`+
+  (lastReward?`<p class="reward">💰 +${lastReward.money} кредита</p>`+lastReward.fresh.map(n=>`<p class="unlock">🔓 Нова кола в гаража: ${n}!</p>`).join(''):'');
+ lastReward=null;
  $('title').textContent='СЪСТЕЗАНИЕТО ЗАВЪРШИ';$('start').textContent='НОВО СЪСТЕЗАНИЕ';
  $('menu').style.display='flex';$('message').style.display='none';showBest();
  state='menu';menuOrbit=0;musicStop();
@@ -727,7 +798,7 @@ function updateBots(dt,locked){
    if(gap>70)target*=.92;else if(gap<-70)target*=1.06;}
   // occasional nitro on straights
   if(b.boost>0){b.boost-=dt;target*=1.18}
-  else if(!b.finished&&botProfile[i]>=DIFF[settings.diff].top*.98&&Math.random()<dt*.06*(settings.diff+1))b.boost=rand(1,2);
+  else if(!b.finished&&botProfile[i]>=botTop*.98&&Math.random()<dt*.06*(settings.diff+1))b.boost=rand(1,2);
   // traffic: change lane or slow down behind other cars
   for(const o of cars){if(o===b)continue;let d=o.dist-b.dist;
    if(d>0&&d<12&&Math.abs(o.lat-b.lat)<2.6){const ov=o===player?Math.hypot(player.vx,player.vz):o.v;
@@ -938,11 +1009,108 @@ function drawMinimap(){
   if(me){mm.strokeStyle='#fff';mm.lineWidth=4;mm.stroke()}}
 }
 
+// ---------- garage ----------
+// its own little scene: a turntable with the car on it
+const gScene=new THREE.Scene();gScene.background=new THREE.Color(0x0b0f15);gScene.fog=new THREE.Fog(0x0b0f15,18,45);
+const gCam=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);
+gScene.add(new THREE.HemisphereLight(0xbfd8ff,0x20252c,1.4));
+{const key=new THREE.SpotLight(0xffffff,420,40,.6,.5,1.6);key.position.set(4,11,5);key.castShadow=true;key.shadow.mapSize.set(1024,1024);key.shadow.bias=-.0005;gScene.add(key,key.target);
+ const blue=new THREE.PointLight(0x2a8cff,60,20);blue.position.set(-6,2.5,-3);const pink=new THREE.PointLight(0xff3fd0,45,20);pink.position.set(6,2,-4);gScene.add(blue,pink);
+ const floor=new THREE.Mesh(new THREE.PlaneGeometry(80,80),new THREE.MeshStandardMaterial({color:0x151a21,roughness:.45,metalness:.3}));floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;gScene.add(floor);
+ const grid=new THREE.GridHelper(80,40,0x2a3442,0x1b222c);grid.position.y=.01;gScene.add(grid);
+ const wallTex=canvasTex(512,128,(g,w,h)=>{g.fillStyle='#10151c';g.fillRect(0,0,w,h);g.fillStyle='#1b232e';for(let x=0;x<w;x+=64)g.fillRect(x,0,30,h);
+  g.font='bold italic 52px Arial';g.textAlign='center';g.textBaseline='middle';const gr=g.createLinearGradient(0,0,w,0);gr.addColorStop(0,'#3cf');gr.addColorStop(.5,'#a6f');gr.addColorStop(1,'#f4c');g.fillStyle=gr;g.fillText('KOD GARAGE',w/2,h/2)},false);
+ const wall=new THREE.Mesh(new THREE.PlaneGeometry(28,7),new THREE.MeshStandardMaterial({map:wallTex,emissive:0xffffff,emissiveMap:wallTex,emissiveIntensity:.25}));wall.position.set(0,3.5,-12);gScene.add(wall);
+}
+const turntable=new THREE.Group();gScene.add(turntable);
+{const disc=new THREE.Mesh(new THREE.CylinderGeometry(4.2,4.4,.16,64),new THREE.MeshStandardMaterial({color:0x2a313c,metalness:.6,roughness:.35}));disc.position.y=.08;disc.receiveShadow=true;turntable.add(disc);
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(4.32,.05,8,96),new THREE.MeshBasicMaterial({color:0x22d3ff}));ring.rotation.x=Math.PI/2;ring.position.y=.12;gScene.add(ring)}
+let gCar=null,gIdx=0,gYaw=.6,gDrag=null,gTab='look';
+function gCfg(){return garage.cars[gIdx]}
+function buildPreview(){
+ if(gCar)turntable.remove(gCar.g);
+ const c=gCfg();gCar=makeCar(c.color,1,{model:gIdx,rims:c.rims,spoiler:c.spoiler});
+ gCar.g.position.y=.16;gCar.g.traverse(o=>{if(o.isMesh)o.castShadow=true});turntable.add(gCar.g);
+}
+const hex=c=>'#'+c.toString(16).padStart(6,'0');
+// stat bars come straight from the C++ tuning (set_setup / setup_value)
+const STATS=[['Скорост',0,72],['Ускорение',1,42],['Сцепление',2,19],['Спирачки',3,58]];
+function statValues(i,cfg){ctl.set_setup(i,cfg.engine,cfg.tires,cfg.brakes,cfg.spoiler);return STATS.map(([,k])=>ctl.setup_value(k))}
+function renderGarage(){
+ const m=MODELS[gIdx],c=gCfg(),open=unlocked(gIdx);
+ $('gmoney').textContent=garage.money;$('gwins').textContent=garage.wins;
+ $('gname').textContent=m.name;$('gdesc').textContent=m.desc;
+ $('gcount').textContent=(gIdx+1)+' / '+MODELS.length;
+ $('glock').innerHTML=open?'':`🔒 Отключва се с <b>${m.wins}</b> ${m.wins===1?'победа':'победи'} (имаш ${garage.wins})`;
+ $('glock').style.display=open?'none':'block';
+ // bars: current setup, plus a faint preview of the next upgrade level
+ const now=statValues(gIdx,c),maxed={...c,engine:3,tires:3,brakes:3};
+ const next=statValues(gIdx,maxed);
+ $('gstats').innerHTML=STATS.map(([n,k,max],j)=>{const v=now[j],w=clamp(v/max,0,1)*100,f=clamp(next[j]/max,0,1)*100;
+  return `<div class="stat"><span>${n}</span><div class="bar"><i class="max" style="width:${f}%"></i><i style="width:${w}%"></i></div><b>${k===0?Math.round(v*7.2)+' km/h':Math.round(w)}</b></div>`}).join('');
+ $('gcolors').innerHTML=PAINTS.map(p=>`<button class="sw${p===c.color?' sel':''}" data-c="${p}" style="background:${hex(p)}"></button>`).join('')+
+  `<label class="sw pick${PAINTS.includes(c.color)?'':' sel'}" title="Друг цвят" style="background:${PAINTS.includes(c.color)?'conic-gradient(red,yellow,lime,cyan,blue,magenta,red)':hex(c.color)}"><input type="color" id="gcustom" value="${hex(c.color)}"></label>`;
+ $('grims').innerHTML=RIMS.map((r,k)=>`<button data-v="${k}" class="${k===c.rims?'sel':''}">${r.name}</button>`).join('');
+ $('gspoil').innerHTML=SPOILERS.map((n,k)=>`<button data-v="${k}" class="${k===c.spoiler?'sel':''}">${n}</button>`).join('');
+ $('gtune').innerHTML=UPGRADES.map(([k,n,ic,hint])=>{const lvl=c[k],cost=UPGRADE_COST[lvl];
+  const btn=lvl>=3?'<button class="up" disabled>МАКС</button>':`<button class="up" data-up="${k}" ${!open||garage.money<cost?'disabled':''}>💰 ${cost}</button>`;
+  return `<div class="uprow"><div><b>${ic} ${n}</b><small>${hint}</small><div class="lvl">${[1,2,3].map(x=>`<i class="${x<=lvl?'on':''}"></i>`).join('')}</div></div>${btn}</div>`}).join('');
+ $('gtab-look').style.display=gTab==='look'?'block':'none';$('gtab-tune').style.display=gTab==='tune'?'block':'none';
+ document.querySelectorAll('#gtabs button').forEach(b=>b.classList.toggle('sel',b.dataset.tab===gTab));
+ const pick=$('gpick');
+ pick.disabled=!open||garage.sel===gIdx;
+ pick.textContent=!open?'🔒 ЗАКЛЮЧЕНА':garage.sel===gIdx?'✔ ИЗБРАНА':'КАРАЙ ТАЗИ КОЛА';
+ $('gpanel').classList.toggle('locked',!open);
+}
+function changeCar(fn){const c=gCfg();if(!unlocked(gIdx))return;fn(c);saveGarage();renderGarage()}
+$('gcolors').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;changeCar(c=>c.color=+b.dataset.c);buildPreview()});
+$('gcolors').addEventListener('change',e=>{if(e.target.id!=='gcustom')return;changeCar(c=>c.color=parseInt(e.target.value.slice(1),16));buildPreview()});
+$('gcolors').addEventListener('input',e=>{if(e.target.id==='gcustom'&&gCar&&unlocked(gIdx))gCar.paint.color.set(e.target.value)});
+$('grims').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;changeCar(c=>c.rims=+b.dataset.v);buildPreview()});
+$('gspoil').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(!b)return;changeCar(c=>c.spoiler=+b.dataset.v);buildPreview()});
+$('gtune').addEventListener('click',e=>{const b=e.target.closest('[data-up]');if(!b||b.disabled)return;const k=b.dataset.up;
+ changeCar(c=>{const cost=UPGRADE_COST[c[k]];if(c[k]>=3||garage.money<cost)return;garage.money-=cost;c[k]++;beep(660,.12,.2,'triangle');setTimeout(()=>beep(990,.18,.2,'triangle'),90)})});
+document.querySelectorAll('#gtabs button').forEach(b=>b.onclick=()=>{gTab=b.dataset.tab;renderGarage()});
+$('gprev').onclick=()=>{gIdx=(gIdx+MODELS.length-1)%MODELS.length;buildPreview();renderGarage()};
+$('gnext').onclick=()=>{gIdx=(gIdx+1)%MODELS.length;buildPreview();renderGarage()};
+$('gpick').onclick=()=>{if(!unlocked(gIdx))return;garage.sel=gIdx;saveGarage();renderGarage();beep(880,.15,.2,'triangle')};
+$('gback').onclick=()=>closeGarage();
+$('garagebtn').onclick=()=>openGarage();
+// drag to spin the car
+const gView=$('gview');
+gView.addEventListener('pointerdown',e=>{gDrag={x:e.clientX,yaw:gYaw};gView.setPointerCapture(e.pointerId)});
+gView.addEventListener('pointermove',e=>{if(gDrag)gYaw=gDrag.yaw-(e.clientX-gDrag.x)*.01});
+const endDrag=()=>{gDrag=null};gView.addEventListener('pointerup',endDrag);gView.addEventListener('pointercancel',endDrag);
+function layoutGarage(){
+ // keep the car in the free part of the screen, next to / above the panel
+ const W=innerWidth,H=innerHeight,r=$('gpanel').getBoundingClientRect();
+ gCam.aspect=W/H;
+ if(W>=760)gCam.setViewOffset(W,H,r.width/2,0,W,H);else gCam.setViewOffset(W,H,0,Math.min(H*.3,(H-r.top)/2),W,H);
+ gCam.updateProjectionMatrix();
+}
+function openGarage(){
+ if(state!=='menu')return;
+ initAudio();state='garage';gIdx=garage.sel;
+ $('menu').style.display='none';$('garage').style.display='block';document.body.classList.add('in-garage');
+ buildPreview();renderGarage();layoutGarage();
+}
+function closeGarage(){
+ if(state!=='garage')return;
+ state='menu';$('garage').style.display='none';document.body.classList.remove('in-garage');$('menu').style.display='flex';
+ buildPlayerCar();resetRace();showCarInfo();
+}
+function updateGarage(dt){
+ if(!gDrag)gYaw+=dt*.25;
+ const a=innerWidth/innerHeight,d=a<1.2?Math.min(16,8/a):9.5;   // back off on narrow screens
+ gCam.position.set(Math.sin(gYaw)*d,2.6,Math.cos(gYaw)*d);gCam.lookAt(0,.75,0);
+}
+
 // ---------- main loop ----------
 let last=performance.now();
 function animate(t){
  requestAnimationFrame(animate);
  const dt=Math.min(.033,(t-last)/1000||0);last=t;
+ if(state==='garage'){updateGarage(dt);renderer.render(gScene,gCam);return}
  let info={speed:0,boosting:false};
  if(state==='countdown'){
   countdown-=dt;const n=Math.ceil(countdown-1);
@@ -989,7 +1157,7 @@ function animate(t){
  renderer.render(scene,camera);
 }
 $('start').onclick=startRace;
-addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));sizeDrops()});
-resetRace();
+addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));sizeDrops();if(state==='garage')layoutGarage()});
+buildPlayerCar();resetRace();showCarInfo();
 $('loading').style.display='none';
 requestAnimationFrame(animate);

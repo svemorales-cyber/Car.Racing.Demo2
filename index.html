@@ -44,6 +44,24 @@
  <button class="big" id="resume">ПРОДЪЛЖИ</button>
  <button class="big" id="quit" style="background:#26303b">КЪМ МЕНЮТО</button>
 </div></div>
+<div id="garage">
+ <div id="gview"></div>
+ <div id="gtop"><button class="box" id="gback">◀ МЕНЮ</button><div class="spacer"></div><div class="box">💰 <span id="gmoney">0</span></div><div class="box">🏆 <span id="gwins">0</span></div></div>
+ <div id="gpanel" class="panel">
+  <div class="gsel"><button id="gprev">◀</button><div><h2 id="gname"></h2><small id="gcount"></small></div><button id="gnext">▶</button></div>
+  <p id="gdesc"></p>
+  <div id="glock"></div>
+  <div id="gstats"></div>
+  <div class="seg" id="gtabs"><button data-tab="look">🎨 Външен вид</button><button data-tab="tune">🔧 Тунинг</button></div>
+  <div id="gtab-look">
+   <div class="glabel">Цвят</div><div id="gcolors"></div>
+   <div class="glabel">Джанти</div><div class="seg" id="grims"></div>
+   <div class="glabel">Спойлер <small>(повече притискане в завоите, малко по-ниска макс. скорост)</small></div><div class="seg" id="gspoil"></div>
+  </div>
+  <div id="gtab-tune"><div id="gtune"></div><p class="keys">Кредити печелиш от състезания. Победите отключват нови коли.</p></div>
+  <button class="big" id="gpick">КАРАЙ ТАЗИ КОЛА</button>
+ </div>
+</div>
 <div id="menu"><div class="panel">
  <h1 id="title">KOD RACING 3D</h1>
  <p id="subtitle">Улично състезание с дрифт, нитро, дъжд и повторения.</p>
@@ -54,7 +72,9 @@
  <div class="opt"><label>Метео</label><div class="seg" data-opt="weather"><button data-v="dry">☀️ Сухо</button><button data-v="rain">🌧️ Дъжд</button></div></div>
  <div class="opt"><label>Музика</label><div class="seg" data-opt="music"><button data-v="1">🎵 Вкл</button><button data-v="0">Изкл</button></div></div>
  <div id="best"></div>
+ <div id="mycar"></div>
  <button class="big" id="start">СТАРТ НА СЪСТЕЗАНИЕТО</button>
+ <button class="big alt" id="garagebtn">🔧 ГАРАЖ</button>
  <p class="keys kbd">W/↑ газ · S/↓ спирачка · A/D/←→ завиване · Space дрифт · Shift нитро<br>C камера · R връщане на пистата · M звук · Esc пауза</p>
  <p class="keys">Дрифтът и сините платформи пълнят нитрото. Натисни газ точно преди „GO!“ за супер старт! В дъжд колата се плъзга повече, а ударите я повреждат.</p>
 </div></div>
