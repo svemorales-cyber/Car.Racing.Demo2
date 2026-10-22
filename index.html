@@ -1,65 +1,204 @@
 <!doctype html>
-<html lang="bg">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>KOD Racing 3D</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <div id="game">
-<div id="loading">Зареждане на 3D двигателя...</div>
+<div id="loading">Loading 3D engine...</div>
 <div id="speedlines"></div>
 <canvas id="drops"></canvas>
 <div id="lightning"></div>
 <div id="flash"></div>
 <div id="hud">
- <div class="box">🏁 <span id="lap">1/3</span><small id="laptime">ОБИКОЛКА 0.00</small></div>
+ <div class="box">🏁 <span id="lap">1/3</span><small id="laptime">LAP 0.00</small></div>
  <div class="box">🏆 <span id="pos">4/4</span></div>
- <div class="box">⏱️ <span id="time">0.00</span><small id="bestlap">НАЙ-ДОБРА —</small></div>
+ <div class="box">⏱️ <span id="time">0.00</span><small id="bestlap">BEST —</small></div>
  <div class="spacer"></div>
- <button class="box" id="mute" title="Звук (M)">🔊</button>
+ <button class="box" id="mute" title="Sound (M)">🔊</button>
 </div>
 <canvas id="minimap" width="340" height="340"></canvas>
 <div id="dash">
- <div><span id="speed">0</span><small>km/h</small><span id="gear">N</span></div>
- <div id="nitro"><div id="nitrofill"></div><span>NITRO</span></div>
- <div id="dmg"><div id="dmgfill"></div><span>ЩЕТИ</span></div>
+ <canvas id="gauge" width="230" height="230"></canvas>
+ <div id="dashrow"><div id="dmg"><div id="dmgfill"></div><span>DAMAGE</span></div>
+  <div id="tyres" title="Tyre grip in use: green = grip left, yellow = at the limit, red = sliding"><i></i><i></i><i></i><i></i></div></div>
 </div>
 <div id="message"></div>
 <div id="toast"></div>
-<div id="wrongway">⚠ ОБРАТНА ПОСОКА ⚠</div>
+<div id="wrongway">⚠ WRONG WAY ⚠</div>
 <div id="touch">
  <div class="steer"><button class="tbtn" data-key="left">◀</button><button class="tbtn" data-key="right">▶</button></div>
  <div class="actions"><button class="tbtn" data-key="drift">DRIFT</button><button class="tbtn nos" data-key="boost">NOS</button><button class="tbtn" data-key="brake">BRK</button><button class="tbtn" data-key="gas">GAS</button></div>
 </div>
 <div id="replay">
  <div class="bar top"></div><div class="bar bot"></div>
- <div class="tag"><i></i>ПОВТОРЕНИЕ</div>
- <div class="hint">Enter или клик — пропусни</div>
+ <div class="tag"><i></i>REPLAY</div>
+ <div class="hint">Press Enter or click to skip</div>
 </div>
 <div id="pause"><div class="panel">
- <h1>ПАУЗА</h1>
- <p class="keys">Esc / P — продължи</p>
- <button class="big" id="resume">ПРОДЪЛЖИ</button>
- <button class="big" id="quit" style="background:#26303b">КЪМ МЕНЮТО</button>
+ <h1>PAUSED</h1>
+ <p class="keys">Press Esc or P to resume</p>
+ <button class="big" id="resume">RESUME</button>
+ <button class="big alt" id="psettings">⚙️ SETTINGS</button>
+ <button class="big" id="quit" style="background:#26303b">MAIN MENU</button>
 </div></div>
-<div id="menu"><div class="panel">
- <h1 id="title">KOD RACING 3D</h1>
- <p id="subtitle">Улично състезание с дрифт, нитро, дъжд и повторения.</p>
- <div id="results"></div>
- <div class="opt"><label>Обиколки</label><div class="seg" data-opt="laps"><button data-v="1">1</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
- <div class="opt"><label>Трудност</label><div class="seg" data-opt="diff"><button data-v="0">Лесно</button><button data-v="1">Нормално</button><button data-v="2">Трудно</button></div></div>
- <div class="opt"><label>Време</label><div class="seg" data-opt="tod"><button data-v="day">☀️ Ден</button><button data-v="sunset">🌇 Залез</button><button data-v="night">🌙 Нощ</button></div></div>
- <div class="opt"><label>Метео</label><div class="seg" data-opt="weather"><button data-v="dry">☀️ Сухо</button><button data-v="rain">🌧️ Дъжд</button></div></div>
- <div class="opt"><label>Музика</label><div class="seg" data-opt="music"><button data-v="1">🎵 Вкл</button><button data-v="0">Изкл</button></div></div>
- <div id="best"></div>
- <button class="big" id="start">СТАРТ НА СЪСТЕЗАНИЕТО</button>
- <p class="keys kbd">W/↑ газ · S/↓ спирачка · A/D/←→ завиване · Space дрифт · Shift нитро<br>C камера · R връщане на пистата · M звук · Esc пауза</p>
- <p class="keys">Дрифтът и сините платформи пълнят нитрото. Натисни газ точно преди „GO!“ за супер старт! В дъжд колата се плъзга повече, а ударите я повреждат.</p>
+<div id="garage">
+ <div id="gview"></div>
+ <div id="gtop">
+  <button class="gbtn" id="gback">◀ BACK</button>
+  <div class="gbrand">KOD <b>GARAGE</b></div>
+  <div class="spacer"></div>
+  <div class="gchip"><small>CREDITS</small><span id="gmoney">0</span></div>
+  <div class="gchip"><small>WINS</small><span id="gwins">0</span></div>
+ </div>
+ <nav id="gnav">
+  <button data-tab="car"><i>🚗</i>Car</button><button data-tab="paint"><i>🎨</i>Paint</button><button data-tab="wheels"><i>🛞</i>Wheels</button>
+  <button data-tab="aero"><i>🏁</i>Aero</button><button data-tab="perf"><i>⚙️</i>Performance</button><button data-tab="setup"><i>🔧</i>Setup</button>
+ </nav>
+ <div id="ginfo">
+  <div class="gclass"><b id="gpiClass">C</b><span id="gpi">0</span><small>PI</small></div>
+  <h2 id="gname"></h2>
+  <p id="gdesc"></p>
+  <div id="glock"></div>
+  <div class="garrows"><button class="gbtn" id="gprev">◀</button><small id="gcount"></small><button class="gbtn" id="gnext">▶</button></div>
+ </div>
+ <aside id="gside">
+  <div id="gstats"></div>
+  <div id="gcontent"></div>
+ </aside>
+ <div id="gstrip"></div>
+ <button class="big" id="gpick">DRIVE THIS CAR</button>
+</div>
+<div id="settings"><div class="panel">
+ <h1>SETTINGS</h1>
+ <div class="sgroup">GRAPHICS</div>
+ <div class="opt"><label>Quality</label><div class="seg" data-opt="gfx"><button data-v="high">High</button><button data-v="low">Low</button></div></div>
+ <p class="keys">High adds soft contact shadows, reflections on your car, glow and much more grass. Use Low on phones and older computers. Changing it restarts the game.</p>
+ <div class="sgroup">AUDIO</div>
+ <div class="opt"><label>Sound</label><div class="seg" data-opt="sound"><button data-v="1">🔊 On</button><button data-v="0">🔇 Off</button></div></div>
+ <div class="opt"><label>Music</label><div class="seg" data-opt="music"><button data-v="1">🎵 On</button><button data-v="0">Off</button></div></div>
+ <div class="opt"><label for="vol">Volume</label><input type="range" id="vol" min="0" max="100" step="5"></div>
+ <div class="sgroup">GAMEPLAY</div>
+ <div class="opt"><label>Camera</label><div class="seg" data-opt="cam"><button data-v="0">Chase</button><button data-v="1">Far</button><button data-v="2">Hood</button></div></div>
+ <div class="sgroup">CONTROLS</div>
+ <div class="keylist">
+    <div><kbd>W</kbd><kbd>↑</kbd><span>Gas</span></div><div><kbd>S</kbd><kbd>↓</kbd><span>Brake / reverse</span></div>
+    <div><kbd>A</kbd><kbd>D</kbd><span>Steer</span></div><div><kbd>Space</kbd><span>Handbrake / drift</span></div>
+    <div><kbd>Shift</kbd><span>Nitro</span></div><div><kbd>C</kbd><span>Camera</span></div>
+    <div><kbd>R</kbd><span>Back on track</span></div><div><kbd>M</kbd><span>Sound</span></div><div><kbd>Esc</kbd><span>Pause</span></div>
+   </div>
+ <div class="sgroup">CONTROLLER</div>
+ <div class="keylist">
+    <div><kbd>RT</kbd><span>Gas</span></div><div><kbd>LT</kbd><span>Brake / reverse</span></div>
+    <div><kbd>L-stick</kbd><kbd>D-pad</kbd><span>Steer</span></div><div><kbd>A</kbd><span>Handbrake / drift</span></div>
+    <div><kbd>B</kbd><kbd>RB</kbd><span>Nitro</span></div><div><kbd>Y</kbd><span>Camera</span></div>
+    <div><kbd>X</kbd><span>Back on track</span></div><div><kbd>Start</kbd><span>Pause</span></div>
+   </div>
+ <p class="keys">Plug in or pair any Xbox, PlayStation or other standard controller and press a button. Gas, brake and steering are analogue. In the menus the d-pad moves, A selects and B goes back.</p>
+ <p class="keys">On a phone use the buttons on the screen: ◀ ▶ steer, GAS, BRK, DRIFT and NOS.</p>
+ <p class="keys">Drifting and the blue pads fill your nitro. Hit the gas just before “GO!” for a super start. Turn in too fast and the front washes wide; too much power swings the tail out. Hold a slide with the gas, steer into the corner for more angle or counter-steer to straighten up. In the rain everything grips less, and crashes damage the car.</p>
+ <button class="big" id="setclose">BACK</button>
 </div></div>
+<div id="ropts"><div class="panel">
+ <h1>RACE OPTIONS</h1>
+ <p class="keys">Extra rules for your races. In multiplayer the host picks them for everyone.</p>
+ <div class="ropt">
+  <div class="opt"><label>Damage pull</label><div class="seg" data-opt="pull"><button data-v="0">Off</button><button data-v="1">On</button></div></div>
+  <p>Hit a corner and the steering bends: the car pulls towards the side that took the most damage. Front hits bend it the most.</p>
+ </div>
+ <div class="ropt">
+  <div class="opt"><label>Boost pads</label><div class="seg" data-opt="pads"><button data-v="0">Off</button><button data-v="1">On</button></div></div>
+  <p>Blue arrow pads on the straights: drive over one for a burst of speed and some nitro.</p>
+ </div>
+ <button class="big" id="roptclose">DONE</button>
+</div></div>
+<div id="hub">
+ <header id="htop">
+  <div class="hbrand">KOD <b>RACING</b> 3D</div>
+  <div class="spacer"></div>
+  <div class="gchip"><small>DRIVER</small><span id="hname"></span></div>
+  <div class="gchip"><small>CREDITS</small><span id="hmoney">0</span></div>
+  <div class="gchip"><small>WINS</small><span id="hwins">0</span></div>
+ </header>
+ <nav id="hnav">
+  <button data-p="race"><i>🏁</i>Race<small>You against three bots</small></button>
+  <button data-p="mp"><i>👥</i>Multiplayer<small>Race your friends online</small></button>
+  <button data-p="garage"><i>🔧</i>Garage<small>Cars, paint and tuning</small></button>
+  <button data-p="settings"><i>⚙️</i>Settings<small>Graphics, sound, controls</small></button>
+ </nav>
+ <div id="hcar">
+  <div class="gclass"><b id="hpiClass">C</b><span id="hpi">0</span><small>PI</small></div>
+  <h2 id="hcarname"></h2>
+  <p id="hcarstats"></p>
+ </div>
+ <aside id="hpanel">
+  <section data-p="race">
+   <h3>QUICK RACE</h3>
+   <p class="hsub">Win races to earn credits and unlock new cars.</p>
+   <div class="opt"><label>Track</label><div class="seg" data-opt="track"><button data-v="0">Grand Prix</button><button data-v="1">Imola</button><button data-v="2">Suzuka</button></div></div>
+   <div class="tinfo"><canvas class="tmap" width="128" height="80"></canvas><div><b class="tname"></b><small class="tdesc"></small></div></div>
+  <div class="opt"><label>Laps</label><div class="seg" data-opt="laps"><button data-v="1">1</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
+  <div class="opt"><label>Difficulty</label><div class="seg" data-opt="diff"><button data-v="0">Easy</button><button data-v="1">Normal</button><button data-v="2">Hard</button></div></div>
+  <div class="opt"><label>Time</label><div class="seg" data-opt="tod"><button data-v="day">☀️ Day</button><button data-v="sunset">🌇 Sunset</button><button data-v="night">🌙 Night</button></div></div>
+  <div class="opt"><label>Weather</label><div class="seg" data-opt="weather"><button data-v="dry">☀️ Dry</button><button data-v="rain">🌧️ Rain</button></div></div>
+  <button class="gbtn wide ropen">⚙️ RACE OPTIONS<span class="rcount"></span><b>›</b></button>
+   <div id="best"></div>
+   <button class="hgo" id="start">START RACE</button>
+  </section>
+  <section data-p="results">
+   <h3 id="rtitle">RACE COMPLETE</h3>
+   <div id="results"></div>
+   <button class="hgo" id="again">RACE AGAIN</button>
+   <button class="hgo alt" id="rdone">CONTINUE</button>
+  </section>
+  <section data-p="mp">
+   <h3>MULTIPLAYER</h3>
+   <div id="mpout">
+    <p class="hsub">Race up to three friends online. One of you creates a room and sends the code or the invite link to the others.</p>
+    <div class="opt"><label for="mpname">Your name</label><input class="htext" id="mpname" maxlength="12" autocomplete="off" spellcheck="false"></div>
+    <div class="opt"><label>Track</label><div class="seg" data-opt="track"><button data-v="0">Grand Prix</button><button data-v="1">Imola</button><button data-v="2">Suzuka</button></div></div>
+    <div class="tinfo"><canvas class="tmap" width="128" height="80"></canvas><div><b class="tname"></b><small class="tdesc"></small></div></div>
+    <button class="hgo" id="mpcreate">CREATE ROOM</button>
+    <div class="hor"><span>or join a friend</span></div>
+    <div class="mprow"><input class="htext" id="mpcode" placeholder="ROOM CODE" maxlength="6" autocomplete="off" spellcheck="false"><button class="hgo slim" id="mpjoin">JOIN</button></div>
+   </div>
+   <div id="mpin" hidden>
+    <small class="hlabel">ROOM CODE</small>
+    <div class="mpcode" id="mproom">-----</div>
+    <button class="gbtn wide" id="mpcopy">📋 Copy invite link</button>
+    <div class="gh">PLAYERS <small id="mpcount"></small></div>
+    <div id="mplist"></div>
+    <p class="hsub" id="mptrack"></p>
+    <div id="mphost">
+     <div class="gh">RACE SETTINGS</div>
+     <div class="opt"><label>Track</label><div class="seg" data-opt="track"><button data-v="0">Grand Prix</button><button data-v="1">Imola</button><button data-v="2">Suzuka</button></div></div>
+     <div class="tinfo"><canvas class="tmap" width="128" height="80"></canvas><div><b class="tname"></b><small class="tdesc"></small></div></div>
+  <div class="opt"><label>Laps</label><div class="seg" data-opt="laps"><button data-v="1">1</button><button data-v="3">3</button><button data-v="5">5</button></div></div>
+  <div class="opt"><label>Difficulty</label><div class="seg" data-opt="diff"><button data-v="0">Easy</button><button data-v="1">Normal</button><button data-v="2">Hard</button></div></div>
+  <div class="opt"><label>Time</label><div class="seg" data-opt="tod"><button data-v="day">☀️ Day</button><button data-v="sunset">🌇 Sunset</button><button data-v="night">🌙 Night</button></div></div>
+  <div class="opt"><label>Weather</label><div class="seg" data-opt="weather"><button data-v="dry">☀️ Dry</button><button data-v="rain">🌧️ Rain</button></div></div>
+  <button class="gbtn wide ropen">⚙️ RACE OPTIONS<span class="rcount"></span><b>›</b></button>
+     <div class="opt"><label>Bots</label><div class="seg" data-opt="mpbots"><button data-v="1">Fill the grid</button><button data-v="0">None</button></div></div>
+     <div class="opt"><label>Cars</label><div class="seg" data-opt="mpstock"><button data-v="0">Tuned</button><button data-v="1">Stock (fair)</button></div></div>
+    </div>
+    <p class="hsub" id="mpwait">Waiting for the host to start the race…</p>
+    <button class="hgo alt" id="mpready">READY</button>
+    <button class="hgo" id="mpstart">START RACE</button>
+    <button class="hgo alt" id="mpleave">LEAVE ROOM</button>
+   </div>
+   <p id="mpstatus"></p>
+  </section>
+ </aside>
+</div>
 </div>
 
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
 <script type="module" src="js/game.js"></script>
 </body>
 </html>
