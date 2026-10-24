@@ -1,0 +1,18 @@
+{
+  "compact": true,
+  "target": "browser",
+  "identifierNamesGenerator": "hexadecimal",
+  "renameGlobals": true,
+  "stringArray": true,
+  "stringArrayEncoding": [],
+  "stringArrayWrappersCount": 0,
+  "stringArrayIndexShift": false,
+  "stringArrayThreshold": 1,
+  "stringArrayRotate": true,
+  "stringArrayShuffle": true,
+  "controlFlowFlattening": false,
+  "deadCodeInjection": false,
+  "selfDefending": false,
+  "debugProtection": false,
+  "sourceMap": false
+}
